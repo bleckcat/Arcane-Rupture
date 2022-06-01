@@ -34,8 +34,6 @@ public class Player : MonoBehaviour
     }
     void FixedUpdate()
     {
-        print(manaBar.slider.value);
-        print(manaBar.slider.maxValue);
         if (currentMana <= maxMana)
         {
             currentMana += MANA_PER_SEC;
