@@ -39,11 +39,7 @@ public static class Noise
       maxPossibleHeight += amplitude;
       amplitude *= persistance;
     }
-
-    if (scale <= 0)
-    {
-      scale = 0.0001f;
-    }
+    
     float maxLocalNoiseHeight = float.MinValue;
     float minLocalNoiseHeight = float.MaxValue;
 
@@ -63,7 +59,7 @@ public static class Noise
           float sampleX = (x - halfWidth + octaveOffsets[i].x) / scale * frequency;
           float sampleY = (y - halfHeight + octaveOffsets[i].y) / scale * frequency;
 
-          float perlinValue = Mathf.PerlinNoise(sampleX, sampleY * 2 - 1);
+          float perlinValue = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
           noiseHeight += perlinValue * amplitude;
           amplitude *= persistance;
           frequency *= lacunarity;
@@ -79,6 +75,12 @@ public static class Noise
         }
 
         noiseMap[x, y] = noiseHeight;
+
+        if (normalizeMode == NormalizeMode.Local)
+        {
+          float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight / 0.9f);
+          noiseMap[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
+        }
       }
     }
     for (int y = 0; y < mapHeight; y++)
@@ -92,11 +94,6 @@ public static class Noise
             maxLocalNoiseHeight,
             noiseMap[x, y]
           );
-        }
-        else
-        {
-          float normalizedHeight = (noiseMap[x, y] + 1) / (maxPossibleHeight);
-          noiseMap[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);
         }
       }
     }

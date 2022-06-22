@@ -18,7 +18,7 @@ public class MapGenerator : MonoBehaviour
 
   public Noise.NormalizeMode normalizeMode;
 
-  public const int mapChunkSize = 239;
+  public bool useFlatShadding;
 
   [Range(0, 6)]
   public int editorLODPreview;
@@ -36,6 +36,7 @@ public class MapGenerator : MonoBehaviour
   public bool useFalloff;
   public AnimationCurve meshHeightCurve;
   public TerrainType[] regions;
+  static MapGenerator instance;
   float[,] falloffMap;
   Queue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new Queue<MapThreadInfo<MapData>>();
   Queue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new Queue<MapThreadInfo<MeshData>>();
@@ -45,9 +46,29 @@ public class MapGenerator : MonoBehaviour
     falloffMap = FalloffGenerator.GenerateFalloffMap(mapChunkSize);
   }
 
+  public static int mapChunkSize
+  {
+    get
+    {
+      if (instance == null)
+      {
+        instance = FindObjectOfType<MapGenerator>();
+      }
+      if (instance.useFlatShadding)
+      {
+        return 95;
+      }
+      else
+      {
+        return 239;
+      }
+    }
+  }
+
   public void DrawMapInEditor()
   {
     MapData mapData = GenerateMapData(Vector2.zero);
+
     MapDisplay display = FindObjectOfType<MapDisplay>();
     if (drawMode == DrawMode.NoiseMap)
     {
@@ -66,7 +87,8 @@ public class MapGenerator : MonoBehaviour
           mapData.heightMap,
           meshHeightMultiplier,
           meshHeightCurve,
-          editorLODPreview
+          editorLODPreview,
+          useFlatShadding
         ),
         TextureGenerator.TextureFromColourMap(mapData.colourMap, mapChunkSize, mapChunkSize)
       );
@@ -113,7 +135,8 @@ public class MapGenerator : MonoBehaviour
       mapData.heightMap,
       meshHeightMultiplier,
       meshHeightCurve,
-      lod
+      lod,
+      useFlatShadding
     );
     lock (meshDataThreadInfoQueue)
     {
@@ -144,8 +167,8 @@ public class MapGenerator : MonoBehaviour
   MapData GenerateMapData(Vector2 center)
   {
     float[,] noiseMap = Noise.GenerateNoiseMap(
-      mapChunkSize+2,
-      mapChunkSize+2,
+      mapChunkSize + 2,
+      mapChunkSize + 2,
       seed,
       noiseScale,
       octaves,
